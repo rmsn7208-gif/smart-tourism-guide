@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<!--
+  ============================================================
+  Smart Tourism Guide & Hotel Booking Website
+  ============================================================
+  الطالب  : ريان أحمد ناصر – 22420221
+  المشرف  : د. نبراس فقيرا
+  المادة  : TM471 – مشروع التخرج 2025-2026
+  ============================================================
+  TECH STACK:
+  ▸ HTML5 / CSS3 / JavaScript ES6+
+  ▸ Google Maps Embed API
+  ▸ Picsum Photos API  – صور واقعية موثوقة
+  ▸ Google Fonts API   – Tajawal + Playfair Display
+  ▸ Geolocation API    – تحديد الموقع الجغرافي
+  ============================================================
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دليل السياحة الذكي | Smart Tourism Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --gold:#C9A84C;--gold-l:#E8C96B;
+  --dark:#0D1117;--d2:#161B22;--d3:#1E2530;--card:#1A2236;
+  --text:#E6EDF3;--muted:#8B949E;--accent:#58A6FF;--green:#3FB950;--red:#F85149;
+  --border:rgba(201,168,76,.22);--r:16px;
+  --shadow:0 12px 40px rgba(0,0,0,.5);
+  --ease:all .25s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden;line-height:1.6;}
+nav{position:fixed;top:0;width:100%;z-index:1000;background:rgba(13,17,23,.93);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:68px;}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:800;color:var(--gold);}
+.logo em{font-family:'Playfair Display',serif;font-style:italic;}
+.nav-links{display:flex;gap:4px;}
+.nav-links button{background:none;border:none;color:var(--muted);padding:8px 14px;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:.88rem;font-weight:500;transition:var(--ease);}
+.nav-links button:hover,.nav-links button.on{color:var(--gold);background:rgba(201,168,76,.1);}
+.nav-auth{display:flex;gap:8px;align-items:center;}
+.btn-g{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-family:'Tajawal',sans-serif;font-size:.88rem;transition:var(--ease);}
+.btn-g:hover{border-color:var(--gold);color:var(--gold);}
+.btn-p{padding:8px 20px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--dark);border:none;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:800;font-size:.88rem;transition:var(--ease);}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(201,168,76,.45);}
+#prog{position:fixed;top:68px;left:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-l));z-index:999;width:0%;transition:width .1s;}
+.pg{display:none;padding-top:68px;}
+.pg.on{display:block;}
+.hero{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;}
+.hbg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 65% 40%,rgba(201,168,76,.08) 0%,transparent 70%),radial-gradient(ellipse 50% 50% at 20% 80%,rgba(88,166,255,.05) 0%,transparent 60%),linear-gradient(160deg,#0D1117 0%,#0F1924 60%,#0D1117 100%);}
+.hgrid{position:absolute;inset:0;opacity:.035;background-image:linear-gradient(var(--gold) 1px,transparent 1px),linear-gradient(90deg,var(--gold) 1px,transparent 1px);background-size:60px 60px;}
+.hero-in{max-width:1300px;margin:0 auto;padding:0 2rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;z-index:1;width:100%;}
+@keyframes fup{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+.htxt{animation:fup .8s ease both;}
+.hvis{animation:fup .8s ease .2s both;}
+.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);padding:6px 18px;border-radius:50px;font-size:.78rem;color:var(--gold);font-weight:700;margin-bottom:1.4rem;}
+h1.big{font-family:'Playfair Display',serif;font-size:clamp(2.6rem,5vw,4rem);font-weight:900;line-height:1.1;margin-bottom:1.2rem;}
+h1.big .g{background:linear-gradient(135deg,var(--gold),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sub{font-size:1.05rem;color:var(--muted);line-height:1.8;margin-bottom:2rem;}
+.loc-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.2);padding:5px 14px;border-radius:50px;font-size:.78rem;color:var(--accent);margin-bottom:1rem;cursor:pointer;transition:var(--ease);}
+.loc-badge:hover{background:rgba(88,166,255,.2);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.loc-badge.loading{animation:pulse 1.2s ease infinite;}
+.sbar{display:flex;align-items:center;gap:10px;background:var(--d2);border:2px solid var(--border);border-radius:16px;padding:6px 6px 6px 18px;margin-bottom:1.8rem;transition:var(--ease);position:relative;}
+.sbar:focus-within{border-color:var(--gold);box-shadow:0 0 0 4px rgba(201,168,76,.1);}
+.sbar input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:1rem;font-family:'Tajawal',sans-serif;}
+.sbar input::placeholder{color:var(--muted);}
+.sbar-cat{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);color:var(--gold);padding:6px 10px;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:.82rem;cursor:pointer;outline:none;}
+.sbar-cat option{background:var(--d2);color:var(--text);}
+#searchResults{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--d2);border:1px solid var(--border);border-radius:12px;max-height:300px;overflow-y:auto;z-index:999;display:none;box-shadow:var(--shadow);}
+#searchResults.open{display:block;}
+.sr-item{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .2s;border-bottom:1px solid var(--border);}
+.sr-item:last-child{border-bottom:none;}
+.sr-item:hover{background:rgba(201,168,76,.07);}
+.sr-item img{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--d3);}
+.sri-name{font-weight:700;font-size:.9rem;}
+.sri-cat{font-size:.74rem;color:var(--muted);}
+.stats{display:flex;gap:2.5rem;}
+.stat .n{font-size:1.9rem;font-weight:900;color:var(--gold);line-height:1;}
+.stat .l{font-size:.76rem;color:var(--muted);margin-top:2px;}
+.mc{border-radius:var(--r);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);height:420px;position:relative;}
+.mc iframe{width:100%;height:100%;display:block;border:0;}
+.mtag{position:absolute;top:14px;right:14px;background:rgba(13,17,23,.9);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.mtag strong{color:var(--gold);display:block;font-size:.84rem;}
+.mtag span{color:var(--muted);font-size:.76rem;}
+.con{max-width:1300px;margin:0 auto;}
+sec,section{padding:5rem 2rem;}
+.sh{text-align:center;margin-bottom:3rem;}
+.sl{display:inline-block;color:var(--gold);font-size:.76rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.st{font-family:'Playfair Display',serif;font-size:2.3rem;font-weight:900;line-height:1.2;margin-bottom:10px;}
+.ss{color:var(--muted);font-size:1rem;}
+.fils{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;}
+.fb{padding:8px 20px;border-radius:50px;border:1px solid var(--border);background:var(--d2);color:var(--muted);cursor:pointer;font-family:'Tajawal',sans-serif;font-size:.86rem;font-weight:500;transition:var(--ease);}
+.fb.on,.fb:hover{background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--dark);border-color:transparent;font-weight:800;}
+.g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.5rem;}
+.ac{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:var(--ease);cursor:pointer;}
+.ac:hover{transform:translateY(-5px);border-color:rgba(201,168,76,.5);box-shadow:var(--shadow);}
+.ac .tw,.hc .tw,.rc-card .tw{overflow:hidden;position:relative;height:210px;}
+.ac img,.hc img,.rc-card img{width:100%;height:210px;object-fit:cover;display:block;transition:transform .4s ease;background:var(--d3);}
+.ac:hover img,.hc:hover img,.rc-card:hover img{transform:scale(1.05);}
+.pa{position:absolute;top:12px;right:12px;background:rgba(13,17,23,.86);backdrop-filter:blur(8px);padding:4px 12px;border-radius:50px;font-size:.72rem;color:var(--gold);font-weight:700;border:1px solid rgba(201,168,76,.3);}
+.ac .bd{padding:1.2rem;}
+.ac .ct{font-size:.7rem;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.ac .nm{font-size:1.06rem;font-weight:800;margin-bottom:5px;}
+.ac .ds{font-size:.86rem;color:var(--muted);line-height:1.55;margin-bottom:12px;}
+.ac .ft{display:flex;align-items:center;justify-content:space-between;}
+.sr-row{display:flex;align-items:center;gap:5px;}
+.sr-row .s{color:var(--gold);font-size:.86rem;}
+.sr-row .rn{font-weight:800;font-size:.9rem;}
+.sr-row .rc{color:var(--muted);font-size:.76rem;}
+.di{font-size:.8rem;color:var(--muted);margin-top:4px;}
+.bm{padding:7px 14px;border-radius:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold);font-family:'Tajawal',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700;transition:var(--ease);}
+.bm:hover{background:var(--gold);color:var(--dark);}
+.hc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:var(--ease);}
+.hc:hover{transform:translateY(-5px);border-color:rgba(201,168,76,.5);box-shadow:var(--shadow);}
+.sa{position:absolute;bottom:12px;right:12px;background:rgba(13,17,23,.86);backdrop-filter:blur(8px);padding:4px 10px;border-radius:8px;font-size:.8rem;color:var(--gold);border:1px solid rgba(201,168,76,.25);}
+
+.hc .bd{padding:1.2rem;}
+.hc .hn{font-size:1.06rem;font-weight:800;margin-bottom:4px;}
+.hc .hl{font-size:.82rem;color:var(--muted);margin-bottom:10px;}
+.ams{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.am{background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.2);color:var(--accent);padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:600;}
+.hf{display:flex;align-items:center;justify-content:space-between;}
+.pr{font-size:1.28rem;font-weight:900;color:var(--gold);}
+.pr span{font-size:.76rem;color:var(--muted);font-weight:400;}
+
+
+
+.rc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:var(--ease);}
+.rc-card:hover{transform:translateY(-5px);border-color:rgba(201,168,76,.5);box-shadow:var(--shadow);}
+.rc-card .bd{padding:1.2rem;}
+.cuisine-tag{display:inline-block;background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.2);color:var(--green);padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:700;margin-bottom:8px;}
+.open-badge{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3);padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:700;}
+.closed-badge{background:rgba(248,81,73,.1);color:var(--red);border:1px solid rgba(248,81,73,.2);padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:700;}
+
+
+
+
+
+.mapsec{background:var(--d2);}
+.mlay{display:grid;grid-template-columns:1fr 370px;gap:1.5rem;height:580px;}
+.mwrap{border-radius:var(--r);overflow:hidden;border:1px solid var(--border);height:100%;}
+.mwrap iframe{width:100%;height:100%;display:block;border:0;}
+.mlist{display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
+.mi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.9rem;display:flex;gap:10px;align-items:center;cursor:pointer;transition:var(--ease);}
+.mi:hover,.mi.sel{border-color:var(--gold);background:rgba(201,168,76,.06);}
+.mi img{width:60px;height:60px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--d3);}
+.mi .mn{font-weight:700;font-size:.9rem;margin-bottom:3px;}
+.mi .mm{font-size:.74rem;color:var(--muted);}
+.mi .md{font-size:.74rem;color:var(--gold);font-weight:700;margin-top:2px;}
+.rsec{background:var(--d2);}
+.rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+.rc2{background:var(--dark);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:12px;cursor:pointer;transition:var(--ease);}
+.rc2:hover{border-color:var(--gold);transform:translateX(-4px);}
+.rnum{font-size:1.9rem;font-weight:900;font-family:'Playfair Display',serif;color:var(--border);min-width:36px;line-height:1;}
+.rc2:first-child .rnum{color:var(--gold);}
+.rc2 img{width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--d3);}
+.rn2{font-weight:700;font-size:.88rem;margin-bottom:2px;}
+.rw{font-size:.73rem;color:var(--muted);}
+.rsc{color:var(--gold);font-weight:800;font-size:1rem;margin-right:auto;}
+.rvc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;transition:var(--ease);}
+.rvc:hover{border-color:rgba(201,168,76,.4);}
+.rvt{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-l));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;color:var(--dark);flex-shrink:0;}
+.rvun{font-weight:700;font-size:.93rem;}
+.rvmt{font-size:.76rem;color:var(--muted);}
+.rvtx{color:var(--muted);font-size:.9rem;line-height:1.7;}
+.rvpl{font-size:.78rem;color:var(--gold);margin-top:10px;font-weight:700;}
+.fbox{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:2rem;margin-bottom:2rem;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.fl{display:block;font-size:.86rem;font-weight:700;color:var(--muted);margin-bottom:5px;}
+.fi,.fsl,.fta{width:100%;padding:11px 14px;border-radius:10px;background:var(--dark);border:1px solid var(--border);color:var(--text);font-size:.93rem;font-family:'Tajawal',sans-serif;outline:none;transition:border-color .2s;}
+.fi:focus,.fsl:focus,.fta:focus{border-color:var(--gold);}
+.fta{resize:vertical;}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);z-index:2000;display:none;align-items:center;justify-content:center;}
+.ov.open{display:flex;}
+@keyframes mIn{from{opacity:0;transform:scale(.9) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal{background:var(--d2);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:440px;max-width:95vw;animation:mIn .3s ease;}
+.mhd{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
+.mhd h2{font-size:1.45rem;font-weight:900;}
+.mcl{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;}
+.tabs{display:flex;background:var(--dark);border-radius:10px;padding:4px;margin-bottom:1.8rem;gap:4px;}
+.tb{flex:1;padding:9px;text-align:center;border-radius:8px;border:none;background:transparent;color:var(--muted);font-family:'Tajawal',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:var(--ease);}
+.tb.on{background:var(--gold);color:var(--dark);}
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--d2);border:1px solid var(--green);color:var(--green);padding:11px 24px;border-radius:50px;font-weight:700;z-index:3000;transition:transform .35s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+footer{background:var(--d2);border-top:1px solid var(--border);padding:3rem 2rem 2rem;}
+.fg{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:2rem;}
+.fb2 p{color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:10px;}
+.fc h4{font-weight:800;margin-bottom:1rem;color:var(--gold);}
+.fc a{display:block;color:var(--muted);text-decoration:none;font-size:.86rem;margin-bottom:8px;cursor:pointer;transition:color .2s;}
+.fc a:hover{color:var(--text);}
+.fbot{max-width:1300px;margin:0 auto;padding-top:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.fbot p{color:var(--muted);font-size:.81rem;}
+@media(max-width:960px){.hero-in{grid-template-columns:1fr;}.mc{display:none;}.mlay{grid-template-columns:1fr;height:auto;}.mlist{display:none;}.fg{grid-template-columns:1fr 1fr;}.nav-links{display:none;}.fr{grid-template-columns:1fr;}.bk-strip{flex-direction:column;text-align:center;}}
+@media(max-width:480px){.fg{grid-template-columns:1fr;}.stats{gap:1.4rem;}}
+
+/* ===== LEAFLET INTERACTIVE MAP ===== */
+#leafletMap{width:100%;height:100%;border-radius:var(--r);z-index:1;}
+.leaflet-popup-content-wrapper{background:var(--d2)!important;border:1px solid var(--border)!important;border-radius:12px!important;color:var(--text)!important;box-shadow:var(--shadow)!important;font-family:'Tajawal',sans-serif!important;}
+.leaflet-popup-tip{background:var(--d2)!important;}
+.leaflet-popup-content{margin:14px 16px!important;min-width:180px;}
+.lf-pop-title{font-weight:800;font-size:.95rem;color:var(--gold);margin-bottom:4px;}
+.lf-pop-desc{font-size:.8rem;color:var(--muted);line-height:1.5;margin-bottom:8px;}
+.lf-pop-cat{font-size:.72rem;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);color:var(--gold);padding:2px 8px;border-radius:50px;display:inline-block;margin-bottom:8px;}
+.lf-pop-btn{display:block;text-align:center;padding:6px 12px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--dark);font-weight:800;font-size:.8rem;border:none;cursor:pointer;width:100%;}
+.leaflet-control-attribution{display:none!important;}
+.map-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
+
+/* ===== COMPARE PRICES BUTTON ===== */
+
+
+
+
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav>
+  <div class="logo">🧭 <em>Smart Tourism</em></div>
+  <div class="nav-links">
+    <button onclick="go('home')"            id="nb-home"            class="on">الرئيسية</button>
+    <button onclick="go('attractions')"     id="nb-attractions">المعالم</button>
+    <button onclick="go('restaurants')"     id="nb-restaurants">المطاعم</button>
+    <button onclick="go('map')"             id="nb-map">الخريطة</button>
+    <button onclick="go('historic')"        id="nb-historic">🏛️ جدة التاريخية</button>
+    <button onclick="go('hotels')"          id="nb-hotels">الفنادق</button>
+    <button onclick="go('recommendations')" id="nb-recommendations">التوصيات</button>
+    <button onclick="go('reviews')"         id="nb-reviews">التقييمات</button>
+  </div>
+  <div class="nav-auth" id="navAuth">
+    <button class="btn-g" onclick="openModal('login')">تسجيل الدخول</button>
+    <button class="btn-p" onclick="openModal('register')">إنشاء حساب</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="pg on" id="pg-home">
+  <section class="hero">
+    <div class="hbg"></div><div class="hgrid"></div>
+    <div class="hero-in">
+      <div class="htxt">
+        <div class="pill">🌟 Smart Tourism Guide — دليل السياحة الذكي</div>
+        <h1 class="big">اكتشف<br><span class="g">وجهتك المثالية</span><br>بذكاء اصطناعي</h1>
+        <p class="sub">منصة تجمع اكتشاف المعالم وحجز الفنادق والمطاعم مع توصيات ذكية — كل شيء في مكان واحد.</p>
+        <div class="loc-badge loading" id="locBadge" onclick="detectLocation()">
+          📍 <span id="locText">جاري تحديد موقعك...</span>
+        </div>
+        <div class="sbar">
+          <span>🔍</span>
+          <input type="search" id="heroQ"
+                 placeholder="ابحث عن معلم، فندق، مطعم، أو وجهة..."
+                 oninput="liveSearch(this.value)"
+                 onkeydown="if(event.key==='Enter'){doSearch();document.getElementById('searchResults').classList.remove('open')}"
+                 autocomplete="off">
+          <select class="sbar-cat" id="searchCat">
+            <option value="all">الكل</option>
+            <option value="nature">طبيعة</option>
+            <option value="heritage">تراث</option>
+            <option value="culture">ثقافة</option>
+            <option value="food">مأكولات</option>
+            <option value="shopping">تسوق</option>
+            <option value="hotel">فنادق</option>
+            <option value="restaurant">مطاعم</option>
+          </select>
+          <button class="btn-p" onclick="doSearch()">بحث</button>
+          <div id="searchResults"></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n">29+</div><div class="l">معلم سياحي</div></div>
+          <div class="stat"><div class="n">12+</div><div class="l">فندق متاح</div></div>
+          <div class="stat"><div class="n">32+</div><div class="l">مطعم وكافيه</div></div>
+          <div class="stat"><div class="n">50K+</div><div class="l">مسافر سعيد</div></div>
+        </div>
+      </div>
+      <div class="hvis">
+        <div class="mc">
+          <iframe id="heroMap" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d236831.08!2d39.0895!3d21.3858!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3d01fb1137e59%3A0xe059ddf0f6c8d49b!2sJeddah!5e0!3m2!1sar!2ssa!4v1710000000000" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div class="mtag"><strong id="mapTagName">📍 جدة، المملكة العربية السعودية</strong><span id="mapTagSub">أكثر من 50 معلم قريب منك</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section style="padding:2.5rem 2rem;background:var(--d2);">
+    <div class="con">
+      <div class="fils">
+        <button class="fb on" onclick="go('attractions')">🏛️ المعالم</button>
+        <button class="fb" onclick="go('restaurants')">🍽️ المطاعم</button>
+        <button class="fb" onclick="go('hotels')">🏨 الفنادق</button>
+        <button class="fb" onclick="go('map')">🗺️ الخريطة</button>
+        <button class="fb" onclick="go('historic')">🏛️ جدة التاريخية</button>
+        <button class="fb" onclick="go('recommendations')">✨ التوصيات</button>
+        <button class="fb" onclick="go('reviews')">⭐ التقييمات</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ATTRACTIONS -->
+<div class="pg" id="pg-attractions">
+  <section>
+    <div class="con">
+      <div class="sh"><span class="sl">🏛️ استكشف</span><h2 class="st">المعالم السياحية</h2><p class="ss">اكتشف أجمل الأماكن في جدة</p></div>
+      <div class="fils" id="aF">
+        <button class="fb on" onclick="filterA('all',this)">الكل</button>
+        <button class="fb" onclick="filterA('heritage',this)">🏛️ تراث</button>
+        <button class="fb" onclick="filterA('nature',this)">🌿 طبيعة وشواطئ</button>
+        <button class="fb" onclick="filterA('culture',this)">🎭 ثقافة وترفيه</button>
+        <button class="fb" onclick="filterA('shopping',this)">🛍️ تسوق</button>
+      </div>
+      <div class="g3" id="aGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- RESTAURANTS -->
+<div class="pg" id="pg-restaurants">
+  <section>
+    <div class="con">
+      <div class="sh"><span class="sl">🍽️ تذوّق</span><h2 class="st">المطاعم المميزة</h2><p class="ss">أفضل المطاعم والكافيهات في جدة</p></div>
+      
+  </section>
+</div>
+
+<!-- MAP -->
+<div class="pg" id="pg-map">
+  <section class="mapsec">
+    <div class="con">
+      <div class="sh"><span class="sl">📍 الخريطة</span><h2 class="st">الخريطة التفاعلية</h2><p class="ss">اضغط على أي مكان لعرض موقعه</p></div>
+      <div class="mlay">
+        <div class="mwrap">
+          <iframe id="mainMap" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d236831.08!2d39.0895!3d21.3858!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3d01fb1137e59%3A0xe059ddf0f6c8d49b!2sJeddah!5e0!3m2!1sar!2ssa!4v1710000000000" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" style="border:0;"></iframe>
+        </div>
+        <div class="mlist" id="mapList"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- HISTORIC JEDDAH MAP -->
+<div class="pg" id="pg-historic">
+  <section class="mapsec">
+    <div class="con">
+      <div class="sh">
+        <span class="sl">🏛️ التراث العمراني</span>
+        <h2 class="st">جدة التاريخية — البلد</h2>
+        <p class="ss">خريطة تفاعلية لأبرز معالم جدة التاريخية المدرجة في قائمة اليونسكو — اضغط على أي رمز لمعرفة التفاصيل</p>
+      </div>
+      <div class="map-filter-bar" id="historicFilters">
+        <button class="fb on" onclick="filterHistoric('all',this)">🗺️ الكل</button>
+        <button class="fb" onclick="filterHistoric('heritage',this)">🏛️ تراث</button>
+        <button class="fb" onclick="filterHistoric('mosque',this)">🕌 مساجد</button>
+        <button class="fb" onclick="filterHistoric('market',this)">🛍️ أسواق</button>
+        <button class="fb" onclick="filterHistoric('landmark',this)">📍 معالم</button>
+      </div>
+      <div class="mlay" style="height:640px;">
+        <div class="mwrap" style="position:relative;">
+          <div id="leafletMap"></div>
+        </div>
+        <div class="mlist" id="historicList" style="display:flex;"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- HOTELS -->
+<div class="pg" id="pg-hotels">
+  <section>
+    <div class="con">
+      <div class="sh"><span class="sl">🏨 إقامة</span><h2 class="st">الفنادق المتاحة</h2><p class="ss">اعثر على أفضل إقامة في جدة</p></div>
+      
+  </section>
+</div>
+
+<!-- RECOMMENDATIONS -->
+<div class="pg" id="pg-recommendations">
+  <section class="rsec">
+    <div class="con">
+      <div class="sh">
+        <span class="sl">✨ Hybrid Recommendation Engine</span>
+        <h2 class="st">التوصيات الذكية</h2>
+        <p class="ss">نظام هجين (Collaborative + Content-Based Filtering) يتعلم تفضيلاتك</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;">
+        <div>
+          <h3 style="font-size:1.15rem;font-weight:800;margin-bottom:1.2rem;">🏛️ معالم مقترحة <span style="background:var(--gold);color:var(--dark);padding:2px 10px;border-radius:50px;font-size:.7rem;margin-right:6px;">AI</span></h3>
+          <div class="rg" id="recA"></div>
+        </div>
+        <div>
+          <h3 style="font-size:1.15rem;font-weight:800;margin-bottom:1.2rem;">🏨 فنادق مقترحة <span style="background:var(--gold);color:var(--dark);padding:2px 10px;border-radius:50px;font-size:.7rem;margin-right:6px;">AI</span></h3>
+          <div class="rg" id="recH"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- REVIEWS -->
+<div class="pg" id="pg-reviews">
+  <section>
+    <div class="con">
+      <div class="sh"><span class="sl">⭐ آراء المسافرين</span><h2 class="st">التقييمات والمراجعات</h2><p class="ss">شارك تجربتك</p></div>
+      <div class="fbox">
+        <h3 style="font-weight:800;margin-bottom:1.2rem;">✍️ أضف تقييمك</h3>
+        <div class="fr">
+          <div><label class="fl">اختر المكان</label>
+            <select class="fsl" id="rvPl">
+              <option>كورنيش جدة</option><option>البلد التاريخي</option>
+              <option>فندق الريتز كارلتون</option><option>حديقة الفلك</option>
+              <option>مول العرب</option><option>مطعم البحر الأحمر</option><option>كافيه روف</option>
+            </select>
+          </div>
+          <div><label class="fl">التقييم</label>
+            <select class="fsl" id="rvRt">
+              <option value="⭐⭐⭐⭐⭐">⭐⭐⭐⭐⭐ ممتاز</option>
+              <option value="⭐⭐⭐⭐">⭐⭐⭐⭐ جيد جداً</option>
+              <option value="⭐⭐⭐">⭐⭐⭐ جيد</option>
+              <option value="⭐⭐">⭐⭐ مقبول</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:1rem;"><label class="fl">تجربتك</label><textarea class="fta" id="rvTx" rows="3" placeholder="شارك تجربتك..."></textarea></div>
+        <button class="btn-p" onclick="submitReview()">✅ نشر التقييم</button>
+      </div>
+      <div class="g3" id="rvGrid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr));"></div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="fg">
+    <div class="fb2">
+      <div class="logo">🧭 <em style="font-family:'Playfair Display',serif;font-style:italic;color:var(--gold);">Smart Tourism Guide</em></div>
+      <p>منصة سياحية ذكية — مشروع تخرج TM471<br>الجامعة العربية المفتوحة 2025-2026</p>
+    </div>
+    <div class="fc"><h4>الخدمات</h4>
+      <a onclick="go('attractions')">المعالم</a>
+      <a onclick="go('restaurants')">المطاعم</a>
+      <a onclick="go('hotels')">الفنادق</a>
+      <a onclick="go('map')">الخريطة</a>
+      <a onclick="go('historic')">جدة التاريخية</a>
+      <a onclick="go('recommendations')">التوصيات</a>
+    </div>
+    <div class="fc"><h4>الدعم</h4><a>مركز المساعدة</a><a>سياسة الخصوصية</a><a>الشروط والأحكام</a><a>تواصل معنا</a></div>
+    <div class="fc"><h4>المشروع</h4><a>ريان أحمد ناصر</a><a>TM471 – 2025-2026</a><a>د. نبراس فقيرا</a><a>22420221</a></div>
+  </div>
+  <div class="fbot">
+    <p>© 2025-2026 Smart Tourism Guide — الجامعة العربية المفتوحة</p>
+    <p style="color:var(--gold);">ريان أحمد ناصر — 22420221</p>
+  </div>
+</footer>
+
+<div class="ov" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="mhd"><h2>تسجيل الدخول</h2><button class="mcl" onclick="closeModal()">✕</button></div>
+    <div class="tabs">
+      <button class="tb on" id="tl" onclick="switchTab('login')">تسجيل الدخول</button>
+      <button class="tb"    id="tr" onclick="switchTab('register')">إنشاء حساب</button>
+    </div>
+    <div id="lF">
+      <div style="margin-bottom:1rem;"><label class="fl">البريد الإلكتروني</label><input class="fi" type="email" id="lE" placeholder="example@email.com"></div>
+      <div style="margin-bottom:1rem;"><label class="fl">كلمة المرور</label><input class="fi" type="password" id="lP" placeholder="••••••••"></div>
+      <button class="btn-p" style="width:100%;padding:13px;justify-content:center;" onclick="doLogin()">تسجيل الدخول</button>
+    </div>
+    <div id="rF" style="display:none;">
+      <div style="margin-bottom:1rem;"><label class="fl">الاسم الكامل</label><input class="fi" type="text" id="rN" placeholder="محمد أحمد"></div>
+      <div style="margin-bottom:1rem;"><label class="fl">البريد الإلكتروني</label><input class="fi" type="email" id="rE" placeholder="example@email.com"></div>
+      <div style="margin-bottom:1rem;"><label class="fl">نوع المستخدم</label>
+        <select class="fsl" id="rT"><option>سائح مستقل</option><option>مسافر اقتصادي</option><option>مستكشف تقني</option></select></div>
+      <div style="margin-bottom:1rem;"><label class="fl">التفضيلات</label>
+        <select class="fsl" id="rPr"><option>تراث وثقافة</option><option>طبيعة ومغامرة</option><option>طعام وترفيه</option><option>تسوق وترفيه</option></select></div>
+      <div style="margin-bottom:1rem;"><label class="fl">كلمة المرور</label><input class="fi" type="password" id="rPa" placeholder="••••••••"></div>
+      <button class="btn-p" style="width:100%;padding:13px;justify-content:center;" onclick="doRegister()">إنشاء الحساب</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✅</div>
+
+<script>
+'use strict';
+
+/* صور ثابتة وموثوقة عبر Picsum بـ seed ثابت لكل مكان */
+const IMG = (seed, w, h) => {
+  w = w||600; h = h||400;
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
+};
+
+/* ============================================================
+   قاعدة بيانات جدة الشاملة — معالم + مطاعم + كافيهات
+   ============================================================ */
+const MAP_URL = (q) => `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d236831.08!2d39.0895!3d21.3858!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3d01fb1137e59%3A${encodeURIComponent(q)}!5e0!3m2!1sar!2ssa`;
+
+const ATTR = [
+  /* ── طبيعة وشواطئ ── */
+  { id:1,  name:'كورنيش جدة',              cat:'nature',   img:IMG('corniche-sea-jeddah'),    rating:4.8, count:23410, dist:'1.2 كم',  desc:'الواجهة البحرية الأشهر في جدة تمتد 30 كم على ساحل البحر الأحمر مع نافورة الملك فهد أطول نافورة في العالم 312م', badge:'الأكثر زيارة', map:'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14803.2!2d39.0944!3d21.5433!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3d14c8f4d26e5%3A0x5f0a7c3e8f9b2d1a!2sJeddah%20Corniche!5e0!3m2!1sar!2ssa' },
+  { id:2,  name:'نافورة الملك فهد',        cat:'nature',   img:IMG('king-fahd-fountain'),     rating:4.9, count:18760, dist:'0.5 كم',  desc:'أطول نافورة في العالم بارتفاع 312 متر، تُضخّ المياه بسرعة 375 كم/ساعة وتُرى من مسافة بعيدة ليلاً', badge:'الأطول عالمياً', map:MAP_URL('fountain-jeddah') },
+  { id:3,  name:'شاطئ المرجان',            cat:'nature',   img:IMG('marjan-beach-jeddah'),    rating:4.5, count:8760,  dist:'15 كم',   desc:'قرية سياحية ترفيهية على شاطئ البحر الأحمر، مياه صافية وأنشطة عائلية وألعاب مائية', badge:'عائلي', map:MAP_URL('marjan-beach') },
+  { id:4,  name:'شاطئ الناصف',             cat:'nature',   img:IMG('beach-clear-water'),      rating:4.3, count:4210,  dist:'6.8 كم',  desc:'شاطئ هادئ بمياه صافية في الجهة الشمالية، مثالي للغوص ومشاهدة الشعاب المرجانية الحمراء', badge:'غوص', map:MAP_URL('nassif-beach') },
+  { id:5,  name:'جزيرة الشراع',            cat:'nature',   img:IMG('sail-island-jeddah'),     rating:4.4, count:5320,  dist:'2.1 كم',  desc:'جزيرة اصطناعية في كورنيش جدة تحتضن حديقة مائية ترفيهية وأنشطة بحرية متنوعة للعائلات', badge:'جزيرة', map:MAP_URL('sail-island') },
+  { id:6,  name:'سارية العلم',             cat:'nature',   img:IMG('flag-pole-jeddah'),       rating:4.5, count:6100,  dist:'3.2 كم',  desc:'أطول سارية علم في العالم بارتفاع 171 متراً، دخلت موسوعة جينيس، تقع قرب حي الشرفية', badge:'جينيس', map:MAP_URL('flag-jeddah') },
+
+  /* ── تراث وتاريخ ── */
+  { id:7,  name:'البلد التاريخي',           cat:'heritage', img:IMG('historic-old-town'),      rating:4.9, count:18760, dist:'3.5 كم',  desc:'منطقة مدرجة في قائمة يونسكو للتراث العالمي 2014، تضم بيوت الرواشين والأسواق العريقة والمساجد الأثرية', badge:'يونسكو', map:'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7402.3!2d39.1178!3d21.4858!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3d01fb1137e59%3A0xe059ddf0f6c8d49b!2sAl-Balad%2C%20Jeddah!5e0!3m2!1sar!2ssa' },
+  { id:8,  name:'بيت نصيف',                cat:'heritage', img:IMG('nassif-house-jeddah'),    rating:4.7, count:6540,  dist:'3.8 كم',  desc:'قصر تاريخي 1872م استقبل الملك عبدالعزيز، يُعدّ تحفة معمارية حجازية أصيلة بالرواشين الخشبية', badge:'تاريخي', map:MAP_URL('nassif-house') },
+  { id:9,  name:'باب مكة',                 cat:'heritage', img:IMG('makkah-gate-jeddah'),     rating:4.4, count:4320,  dist:'4.0 كم',  desc:'البوابة الشرقية التاريخية لجدة التي كان يمرّ منها الحجاج، تحوّلت لمنطقة تسوق وتراث شعبي', badge:'تراث', map:MAP_URL('bab-makkah') },
+  { id:10, name:'متحف عبدالرؤوف خليل',    cat:'heritage', img:IMG('museum-islamic-art'),     rating:4.6, count:3210,  dist:'5.5 كم',  desc:'متحف يضمّ مقتنيات نادرة تعكس التراث الإسلامي، فيه مسجد صغير ومعروضات من مختلف العصور', badge:'متحف', map:MAP_URL('khalil-museum') },
+  { id:11, name:'قصر خزام',               cat:'heritage', img:IMG('khozam-palace'),          rating:4.5, count:2870,  dist:'4.7 كم',  desc:'قصر ملكي تاريخي تحوّل إلى متحف يضم قطعاً أثرية توثّق تاريخ المملكة ومراحل تأسيسها', badge:'قصر ملكي', map:MAP_URL('khozam-palace') },
+  { id:12, name:'بيت باناجة',             cat:'heritage', img:IMG('banajah-house'),          rating:4.3, count:1980,  dist:'3.9 كم',  desc:'نموذج مثالي للعمارة الحجازية الأصيلة بالرواشين المنحوتة، مدرج ضمن مناطق التراث العالمي', badge:'يونسكو', map:MAP_URL('banajah-house') },
+  { id:13, name:'سور جدة وحاراته',        cat:'heritage', img:IMG('jeddah-old-wall'),        rating:4.4, count:2540,  dist:'3.6 كم',  desc:'آثار السور التاريخي للمدينة مع الحارات القديمة، يعكس التطور العمراني لجدة عبر القرون', badge:'أثري', map:MAP_URL('jeddah-wall') },
+  { id:14, name:'برج خزام',               cat:'heritage', img:IMG('khozam-tower-water'),     rating:4.2, count:1650,  dist:'2.9 كم',  desc:'خزان المياه التاريخي الشهير، من أبرز معالم جدة القديمة في حي النزلة اليمانية', badge:'معلم تاريخي', map:MAP_URL('khozam-tower') },
+
+  /* ── ثقافة وفنون ── */
+  { id:15, name:'حديقة الفلك',            cat:'culture',  img:IMG('observatory-night'),      rating:4.6, count:9870,  dist:'5.1 كم',  desc:'حديقة علمية فلكية فريدة مع مراصد وعروض تعليمية وقبة فلكية، تجربة ممتعة للأطفال والكبار', badge:'علمي', map:MAP_URL('falak-garden') },
+  { id:16, name:'متحف جدة الإقليمي',     cat:'culture',  img:IMG('museum-interior-art'),    rating:4.5, count:7560,  dist:'4.2 كم',  desc:'متحف يوثق تاريخ جدة وتاريخ المنطقة الغربية عبر العصور بمقتنيات نادرة وعروض تفاعلية', badge:'ثقافي', map:MAP_URL('jeddah-museum') },
+  { id:17, name:'عالم الأمازون',          cat:'culture',  img:IMG('amazon-world-jeddah'),    rating:4.7, count:12300, dist:'8.4 كم',  desc:'عالم ترفيهي يحاكي غابة الأمازون بمساحة 1800م² مع شخصيات الحيوانات وشلال اصطناعي 15م وبحيرة', badge:'ترفيهي', map:MAP_URL('amazon-world') },
+  { id:18, name:'حلبة كورنيش جدة F1',    cat:'culture',  img:IMG('f1-circuit-jeddah'),      rating:4.9, count:15400, dist:'10 كم',   desc:'حلبة سباق الفورمولا 1 في جدة، من أسرع حلبات العالم على ساحل البحر الأحمر، تستضيف الجائزة الكبرى', badge:'F1 عالمي', map:MAP_URL('f1-jeddah') },
+  { id:19, name:'مركز الملك عبدالله الثقافي', cat:'culture', img:IMG('cultural-center-jeddah'), rating:4.6, count:8920, dist:'7.1 كم', desc:'أبرز مركز ثقافي في جدة يستضيف معارض فنية ومهرجانات وحفلات موسيقية طوال العام', badge:'ثقافي', map:MAP_URL('cultural-center') },
+  { id:20, name:'حديقة الشلال',           cat:'culture',  img:IMG('waterfall-park'),         rating:4.4, count:10200, dist:'12 كم',   desc:'حديقة ترفيهية عائلية بها ألعاب مائية وملاهٍ وشلالات، من أكثر وجهات العائلات في جدة', badge:'عائلي', map:MAP_URL('shalal-park') },
+
+  /* ── تسوق ومراكز ── */
+  { id:21, name:'مول العرب',              cat:'shopping', img:IMG('luxury-mall-shopping'),   rating:4.6, count:56000, dist:'8.3 كم',  desc:'أكبر مجمع تسوق في منطقة جدة بأكثر من 400 متجر وملاهٍ وأكوا بارك وفندق', badge:'الأكبر', map:MAP_URL('mall-arabia') },
+  { id:22, name:'سوق الحراج',             cat:'shopping', img:IMG('market-bazaar-arabic'),   rating:4.4, count:32000, dist:'2.8 كم',  desc:'سوق شعبي عريق يعكس روح جدة التجارية الأصيلة بالسلع القديمة والتحف والبضائع المتنوعة', badge:'شعبي', map:MAP_URL('haraj-market') },
+  { id:23, name:'عزيز مول',               cat:'shopping', img:IMG('aziz-mall-jeddah'),       rating:4.5, count:28000, dist:'9.2 كم',  desc:'من أبرز مراكز التسوق في جدة بمتاجر الأزياء والإلكترونيات والمطاعم، ازدحام في العطل', badge:'تسوق', map:MAP_URL('aziz-mall') },
+  { id:24, name:'ردسي مول',               cat:'shopping', img:IMG('red-sea-mall-jeddah'),    rating:4.5, count:24500, dist:'11 كم',   desc:'مجمع تسوق كبير يضمّ متاجر عالمية ومحلية ومطاعم وسينما وملاهٍ للأطفال', badge:'تسوق', map:MAP_URL('red-sea-mall') },
+  { id:25, name:'تجار جدة',               cat:'shopping', img:IMG('tjara-jeddah'),           rating:4.3, count:19800, dist:'7.5 كم',  desc:'مشروع متكامل يوفر بيئة عمل عصرية ومراكز تسوق ومكاتب لرجال الأعمال والشركات', badge:'تجاري', map:MAP_URL('tjara-jeddah') },
+  { id:26, name:'برج طريق الملك',         cat:'shopping', img:IMG('king-road-tower'),        rating:4.2, count:14200, dist:'6.0 كم',  desc:'برج 34 طابقاً يحتوي على أضخم شاشة LED إعلانية في العالم، معلم حديث من معالم جدة', badge:'الأضخم عالمياً', map:MAP_URL('king-road-tower') },
+
+  /* ── دين ومساجد ── */
+  { id:27, name:'مسجد الرحمة العائم',     cat:'heritage', img:IMG('floating-mosque-jeddah'), rating:4.8, count:21000, dist:'2.0 كم',  desc:'المسجد العائم الشهير على ساحل كورنيش جدة، يبدو عائماً على البحر عند المدّ، معلم لا يُنسى', badge:'إسلامي', map:MAP_URL('rahma-mosque') },
+  { id:28, name:'مسجد الشافعي',           cat:'heritage', img:IMG('shafii-mosque-jeddah'),   rating:4.7, count:8300,  dist:'4.1 كم',  desc:'أقدم مساجد جدة يعود للقرن السابع الهجري، مبني بالحجر المرجاني النادر، تحفة معمارية', badge:'الأقدم', map:MAP_URL('shafii-mosque') },
+  { id:29, name:'مسجد عثمان بن عفان',    cat:'heritage', img:IMG('othman-mosque'),          rating:4.6, count:5600,  dist:'3.7 كم',  desc:'مسجد تاريخي يُنسب إنشاؤه إلى الخليفة الراشد عثمان بن عفان رضي الله عنه', badge:'تاريخي', map:MAP_URL('othman-mosque') },
+];
+
+const HTLS = [
+  { id:1,  name:'فندق الريتز كارلتون جدة',  stars:5, img:IMG('ritz-luxury-hotel'),      price:1850, ams:['واي فاي','مسبح','سبا','مطعم','موقف','شاطئ'], rating:4.9, count:12430, loc:'كورنيش جدة', f:'5star' },
+  { id:2,  name:'هيلتون جدة',               stars:5, img:IMG('hilton-hotel-pool'),      price:1200, ams:['واي فاي','جيم','مطعم','شاطئ','سبا'],           rating:4.7, count:9870,  loc:'وسط جدة',    f:'5star' },
+  { id:3,  name:'شانغريلا جدة',             stars:5, img:IMG('shangri-la-jeddah'),      price:1650, ams:['واي فاي','مسبح','سبا','مطعم','بحر'],            rating:4.8, count:7640,  loc:'كورنيش جدة', f:'5star' },
+  { id:4,  name:'فور سيزونز جدة',           stars:5, img:IMG('four-seasons-jeddah'),    price:2100, ams:['واي فاي','مسبح','سبا','مطعم','شاطئ','موقف'],   rating:4.9, count:6320,  loc:'شمال جدة',   f:'5star' },
+  { id:5,  name:'روز وود جدة',             stars:5, img:IMG('rosewood-jeddah-hotel'),  price:1950, ams:['واي فاي','مسبح','سبا','مطعم','بحر'],            rating:4.8, count:5410,  loc:'كورنيش الشمالي', f:'5star' },
+  { id:6,  name:'فندق موفنبيك',             stars:4, img:IMG('movenpick-resort'),       price:750,  ams:['واي فاي','مسبح','مطعم','عائلي','جيم'],          rating:4.5, count:6540,  loc:'جزيرة النورس', f:'4star' },
+  { id:7,  name:'هوليداي إن جدة',          stars:4, img:IMG('holiday-inn-jeddah'),      price:620,  ams:['واي فاي','جيم','مطعم','موقف'],                  rating:4.3, count:5210,  loc:'حي الروضة',  f:'4star' },
+  { id:8,  name:'سيتي ماكس جدة',           stars:4, img:IMG('modern-hotel-city'),       price:450,  ams:['واي فاي','جيم','مطعم'],                          rating:4.3, count:4320,  loc:'حي الروضة',  f:'4star' },
+  { id:9,  name:'فندق كراون بلازا',        stars:5, img:IMG('crowne-plaza-jeddah'),     price:900,  ams:['واي فاي','مسبح','جيم','مطعم','مركز أعمال'],    rating:4.6, count:4870,  loc:'طريق المدينة', f:'5star' },
+  { id:10, name:'إنتركونتيننتال جدة',     stars:5, img:IMG('intercontinental-jeddah'), price:1100, ams:['واي فاي','مسبح','سبا','مطعم','شاطئ'],           rating:4.7, count:4120,  loc:'كورنيش جدة', f:'5star' },
+  { id:11, name:'فندق السلام',             stars:3, img:IMG('clean-hotel-budget'),      price:280,  ams:['واي فاي','مطعم'],                                rating:4.1, count:3210,  loc:'البلد التاريخي', f:'budget' },
+  { id:12, name:'فندق المسافر',            stars:3, img:IMG('budget-travel-hotel'),     price:180,  ams:['واي فاي','موقف'],                                rating:3.9, count:2150,  loc:'قرب المطار', f:'budget' },
+];
+
+const RESTS = [
+  /* ── مأكولات بحرية ── */
+  { id:1,  name:'مطعم البحر الأحمر',       cat:'seafood', img:IMG('seafood-restaurant-view'),   rating:4.9, count:18760, price:'$$$$', cuisine:'مأكولات بحرية',    loc:'كورنيش جدة',      open:true,  desc:'أفخم مطعم مأكولات بحرية في جدة بإطلالة مباشرة على البحر الأحمر وسمك طازج يومياً', link:'https://www.google.com/maps/search/مطعم+البحر+الأحمر+جدة' },
+  { id:2,  name:'أوشن بلو',               cat:'seafood', img:IMG('ocean-blue-jeddah'),         rating:4.7, count:8340,  price:'$$$',  cuisine:'بحري وأسماك',      loc:'كورنيش جدة',      open:true,  desc:'من أفضل مطاعم الأسماك في جدة بأسعار معقولة وأجواء عائلية', link:'https://www.google.com/maps/search/ocean+blue+jeddah' },
+  { id:3,  name:'مينا هاوس',              cat:'seafood', img:IMG('mina-house-seafood'),        rating:4.6, count:6210,  price:'$$$',  cuisine:'بحري وعالمي',      loc:'الواجهة البحرية', open:true,  desc:'مطعم بحري بإطلالة على البحر يقدم أطباقاً بحرية وعالمية', link:'https://www.google.com/maps/search/mina+house+jeddah' },
+  { id:4,  name:'واترفرونت كيتشن',        cat:'seafood', img:IMG('waterfront-kitchen-jeddah'), rating:4.8, count:5430,  price:'$$$$', cuisine:'بحري فاخر',        loc:'فندق شانغريلا',   open:true,  desc:'تجربة بوفيه بحري فاخر حائز جائزة أفضل بوفيه جدة 2023', link:'https://www.google.com/maps/search/waterfront+kitchen+jeddah' },
+  { id:5,  name:'مطعم الحمراء البحري',    cat:'seafood', img:IMG('hamra-seafood'),             rating:4.5, count:7650,  price:'$$$',  cuisine:'بحري عربي',        loc:'حي الحمراء',      open:true,  desc:'أسماك طازجة من البحر الأحمر مباشرة، أجواء عائلية هادئة', link:'https://www.google.com/maps/search/مطعم+الحمراء+البحري+جدة' },
+  { id:6,  name:'مطعم نعنع البحري',       cat:'seafood', img:IMG('naanaa-seafood-jeddah'),     rating:4.6, count:9800,  price:'$$$',  cuisine:'بحري شعبي',        loc:'حي الروضة',       open:true,  desc:'من أشهر مطاعم الأسماك الشعبية في جدة، ربيان وكراكند وسمك طازج', link:'https://www.google.com/maps/search/نعنع+البحري+جدة' },
+  { id:7,  name:'البيك فيش',              cat:'seafood', img:IMG('albaik-fish-jeddah'),        rating:4.4, count:7200,  price:'$$',   cuisine:'سمك مقلي',         loc:'جميع الأحياء',    open:true,  desc:'فرع البيك المتخصص في الأسماك والمأكولات البحرية بسعر شعبي', link:'https://www.google.com/maps/search/albaik+fish+jeddah' },
+
+  /* ── مطبخ عربي وخليجي ── */
+  { id:8,  name:'مطعم الشام',             cat:'arabic',  img:IMG('arabic-levantine-food'),     rating:4.8, count:23410, price:'$$',   cuisine:'مطبخ شامي',        loc:'البلد التاريخي',  open:true,  desc:'أصالة المطبخ الشامي — منسف وشاورما وكباب ومزة لبنانية في قلب التاريخ', link:'https://www.google.com/maps/search/مطعم+الشام+جدة' },
+  { id:9,  name:'مطعم شبابيك',            cat:'arabic',  img:IMG('shababeek-restaurant'),      rating:4.8, count:11200, price:'$$$',  cuisine:'لبناني أصيل',      loc:'حي الروضة',       open:true,  desc:'تجربة لبنانية كاملة بالنكهات الأصيلة والأجواء الراقية، فطور لبناني استثنائي', link:'https://www.google.com/maps/search/شبابيك+جدة' },
+  { id:10, name:'ميز',                    cat:'arabic',  img:IMG('mez-restaurant-jeddah'),     rating:4.7, count:9430,  price:'$$$',  cuisine:'شرقي راقي',        loc:'حي الزهراء',      open:true,  desc:'يمزج النكهة الشرقية بالأجواء الراقية، ضيافة لبنانية حقيقية', link:'https://www.google.com/maps/search/mez+jeddah' },
+  { id:11, name:'السدة',                  cat:'arabic',  img:IMG('alsidda-yemeni'),            rating:4.7, count:14300, price:'$$',   cuisine:'يمني أصيل',        loc:'شارع التحلية',    open:true,  desc:'مطعم يمني شعبي أصيل — مندي وبخاري ولحم طري', link:'https://www.google.com/maps/search/السدة+جدة' },
+  { id:12, name:'مطاعم معين',             cat:'arabic',  img:IMG('moin-yemeni-jeddah'),        rating:4.6, count:12100, price:'$',    cuisine:'يمني شعبي',        loc:'حي الربوة',       open:true,  desc:'سلسلة مطاعم يمنية شهيرة بفروع متعددة، نكهات يمنية بجودة ثابتة', link:'https://www.google.com/maps/search/معين+جدة' },
+  { id:13, name:'مطعم الدوار',            cat:'arabic',  img:IMG('aldawar-egyptian'),          rating:4.6, count:8760,  price:'$$',   cuisine:'مصري شعبي',        loc:'ردسي مول',        open:true,  desc:'تجربة مصرية كاملة — طعمية وكشري ومحشي وحمام محشو', link:'https://www.google.com/maps/search/الدوار+جدة' },
+  { id:14, name:'كشري الملك',             cat:'arabic',  img:IMG('koshari-egyptian-food'),     rating:4.3, count:12540, price:'$',    cuisine:'مصري شعبي',        loc:'وسط جدة',         open:true,  desc:'كشري مصري أصلي وفول ومدمس — وجبات شعبية مميزة', link:'https://www.google.com/maps/search/كشري+الملك+جدة' },
+  { id:15, name:'مطعم شارع الثقافة',     cat:'arabic',  img:IMG('culture-street-jeddah'),     rating:4.4, count:6780,  price:'$$',   cuisine:'سعودي شعبي',       loc:'شارع التحلية',    open:true,  desc:'يُبرز الأصالة السعودية عبر أطباق شعبية تقليدية في أجواء تراثية', link:'https://www.google.com/maps/search/شارع+الثقافة+جدة' },
+  { id:16, name:'مطعم إنهابيت',          cat:'arabic',  img:IMG('inhabit-restaurant-jeddah'), rating:4.7, count:6540,  price:'$$$',  cuisine:'شرق أوسطي مبتكر',  loc:'حي الزهراء',      open:true,  desc:'افتتح 2024 يمزج المأكولات الشرق أوسطية بلمسة عصرية وتراس فاخر', link:'https://www.google.com/maps/search/inhabit+jeddah' },
+  { id:17, name:'مطعم الركن اللبناني',   cat:'arabic',  img:IMG('lebanese-corner-jeddah'),    rating:4.5, count:8320,  price:'$$',   cuisine:'لبناني شعبي',      loc:'حي المروة',       open:true,  desc:'مطعم لبناني شعبي بأسعار مناسبة — حمص وفتوش وكفتة وسفيحة', link:'https://www.google.com/maps/search/الركن+اللبناني+جدة' },
+  { id:18, name:'مطعم أبو زيد',          cat:'arabic',  img:IMG('abuzeid-madfoon-jeddah'),    rating:4.6, count:11400, price:'$$',   cuisine:'مدفون وكبسة',      loc:'حي الروضة',       open:true,  desc:'الوجهة الأولى لمحبي المدفون والكبسة في جدة — لحم طري ورز بسمتي', link:'https://www.google.com/maps/search/أبو+زيد+جدة' },
+  { id:19, name:'هواية الطعام',          cat:'arabic',  img:IMG('hawaya-arabic-jeddah'),      rating:4.5, count:9800,  price:'$$',   cuisine:'سعودي متنوع',      loc:'طريق الأمير محمد', open:true, desc:'قائمة متنوعة تشمل مأكولات سعودية ولبنانية ويمنية في مكان واحد', link:'https://www.google.com/maps/search/هواية+الطعام+جدة' },
+  { id:20, name:'فروج ثاني',             cat:'arabic',  img:IMG('farooj-thani-jeddah'),       rating:4.7, count:13200, price:'$',    cuisine:'دجاج شعبي',        loc:'جميع الأحياء',    open:true,  desc:'سلسلة شعبية للدجاج المشوي والمقلي بنكهة سعودية مميزة بأسعار رخيصة', link:'https://www.google.com/maps/search/فروج+ثاني+جدة' },
+
+  /* ── مطاعم عالمية ── */
+  { id:21, name:'ميازو',                  cat:'international', img:IMG('myazu-asian-jeddah'),      rating:4.8, count:7650,  price:'$$$$', cuisine:'آسيوي فاخر',       loc:'حي الزهراء',      open:true,  desc:'أبرز المطاعم الآسيوية في جدة، سوشي طازج ومأكولات يابانية بمستوى عالمي', link:'https://www.google.com/maps/search/myazu+jeddah' },
+  { id:22, name:'سان كارلو شيشتي',       cat:'international', img:IMG('san-carlo-italian'),       rating:4.7, count:6430,  price:'$$$$', cuisine:'إيطالي فاخر',      loc:'نادي اليخوت',     open:true,  desc:'سلسلة إيطالية عالمية بأجواء ميلانو الأنيقة، باستا طازجة وريزوتو زعفران', link:'https://www.google.com/maps/search/san+carlo+jeddah' },
+  { id:23, name:'لو كومبتوار',            cat:'international', img:IMG('le-comptoir-french'),      rating:4.8, count:5210,  price:'$$$$', cuisine:'فرنسي أنيق',       loc:'نادي اليخوت',     open:true,  desc:'أجواء باريسية ساحرة مع إطلالة على البحر وشطائر فرنسية كلاسيكية', link:'https://www.google.com/maps/search/le+comptoir+jeddah' },
+  { id:24, name:'مطعم خيال',             cat:'international', img:IMG('khayal-turkish-jeddah'),   rating:4.7, count:9870,  price:'$$$',  cuisine:'تركي وعالمي',      loc:'كورنيش جدة',      open:true,  desc:'أفخم مطاعم جدة للمأكولات التركية مع موسيقى تركية حية وإطلالة بحرية', link:'https://www.google.com/maps/search/خيال+جدة' },
+  { id:25, name:'راسوي',                  cat:'international', img:IMG('rasoi-indian-jeddah'),     rating:4.6, count:4320,  price:'$$$$', cuisine:'هندي فاخر',        loc:'فندق البحر الأحمر', open:true, desc:'مطعم هندي راقٍ بنكهات هندية أصيلة بأسلوب معاصر', link:'https://www.google.com/maps/search/rasoi+jeddah' },
+  { id:26, name:'مطعم رومانسية',         cat:'international', img:IMG('romansia-jeddah'),         rating:4.5, count:7890,  price:'$$$',  cuisine:'عائلي متنوع',      loc:'كورنيش جدة',      open:true,  desc:'مطعم عائلي شهير بإطلالة جميلة على البحر، قائمة متنوعة تناسب الجميع', link:'https://www.google.com/maps/search/رومانسية+جدة' },
+  { id:27, name:'ذا لاكي لاما',          cat:'international', img:IMG('lucky-llama-jeddah'),      rating:4.6, count:4870,  price:'$$$',  cuisine:'لاتيني مبتكر',     loc:'حي الزهراء',      open:true,  desc:'نكهات عالمية مرحة بتصميم فريد في جدة', link:'https://www.google.com/maps/search/lucky+llama+jeddah' },
+  { id:28, name:'مطعم بياتو',            cat:'international', img:IMG('biato-italian-jeddah'),    rating:4.5, count:6540,  price:'$$',   cuisine:'إيطالي شرقي',     loc:'حي الروضة',       open:true,  desc:'يجمع بيتزا وباستا إيطالية مع شاورما ورز بخاري بأسعار ممتازة', link:'https://www.google.com/maps/search/biato+jeddah' },
+  { id:29, name:'بريك بيتزا',            cat:'international', img:IMG('break-pizza-jeddah'),      rating:4.5, count:8900,  price:'$$',   cuisine:'بيتزا إيطالية',    loc:'حي الزهراء',      open:true,  desc:'بيتزا إيطالية بعجين رقيق حجري ومكونات طازجة، من أفضل البيتزا في جدة', link:'https://www.google.com/maps/search/break+pizza+jeddah' },
+  { id:30, name:'مطعم أنانا',            cat:'international', img:IMG('anana-restaurant-jeddah'), rating:4.6, count:5430,  price:'$$$',  cuisine:'فيوجن عالمي',      loc:'شارع التحلية',    open:true,  desc:'مطعم فيوجن يجمع نكهات شرقية وغربية في أطباق مبتكرة وتصميم عصري', link:'https://www.google.com/maps/search/anana+jeddah' },
+  { id:31, name:'ريبليز',                cat:'international', img:IMG('ripleys-restaurant'),      rating:4.4, count:7800,  price:'$$$',  cuisine:'أمريكي راقي',      loc:'مول العرب',       open:true,  desc:'تجربة طعام أمريكي راقية داخل مول العرب، برجر فاخر وستيك وأسعار معتدلة', link:'https://www.google.com/maps/search/ripleys+jeddah' },
+  { id:32, name:'مطعم كوشي',            cat:'international', img:IMG('koshi-noodles-jeddah'),    rating:4.5, count:6200,  price:'$$$',  cuisine:'نودلز آسيوي',      loc:'حي الحمراء',      open:true,  desc:'متخصص في النودلز والمأكولات الآسيوية الشعبية، رامن وباد تاي وغيرها', link:'https://www.google.com/maps/search/koshi+jeddah' },
+
+  /* ── مشاوي وفاست فود ── */
+  { id:33, name:'شاورما الأستاذ',        cat:'grills',        img:IMG('shawarma-streetfood'),     rating:4.6, count:32100, price:'$',    cuisine:'شاورما شعبي',      loc:'البلد التاريخي',  open:true,  desc:'أشهر شاورما في جدة منذ 1985 — سر الصوص والخبز الطازج الذي لا يتغير', link:'https://www.google.com/maps/search/شاورما+الأستاذ+جدة' },
+  { id:34, name:'البيك',                 cat:'grills',        img:IMG('albaik-jeddah'),           rating:4.7, count:54300, price:'$',    cuisine:'دجاج مقلي',        loc:'جميع الأحياء',    open:true,  desc:'سلسلة سعودية شهيرة عالمياً بالدجاج المقلي المميز — رمز جدة الغذائي', link:'https://www.google.com/maps/search/البيك+جدة' },
+  { id:35, name:'مطعم ذا درايف',        cat:'grills',        img:IMG('drive-in-restaurant'),     rating:4.4, count:9870,  price:'$$',   cuisine:'أمريكي درايف إن',  loc:'حي الروضة',       open:true,  desc:'تجربة تناول الطعام في سيارتك — برجر وسندويشات أمريكية كلاسيكية', link:'https://www.google.com/maps/search/the+drive+jeddah' },
+  { id:36, name:'مطعم كبابجي',          cat:'grills',        img:IMG('kabaji-grill-jeddah'),     rating:4.5, count:8430,  price:'$$',   cuisine:'مشاوي تركية',      loc:'حي الزهراء',      open:true,  desc:'مشاوي تركية وسعودية بأجواء دافئة ومريحة للعائلات', link:'https://www.google.com/maps/search/كبابجي+جدة' },
+  { id:37, name:'ستيك هاوس برايم',      cat:'grills',        img:IMG('steakhouse-prime-grill'),  rating:4.6, count:7540,  price:'$$$$', cuisine:'مشاوي ولحوم',      loc:'حي الزهراء',      open:false, desc:'لحوم مستوردة مشوية على الفحم بخبرة شيف عالمي', link:'https://www.google.com/maps/search/prime+steakhouse+jeddah' },
+  { id:38, name:'أركان',                 cat:'grills',        img:IMG('arkan-grills-jeddah'),     rating:4.6, count:10400, price:'$$',   cuisine:'مشاوي سعودية',     loc:'حي الروضة',       open:true,  desc:'مطعم عائلي للمشاوي السعودية والخليجية، وجبات وفيرة بأسعار مناسبة', link:'https://www.google.com/maps/search/أركان+جدة' },
+  { id:39, name:'ووك تو ووك',           cat:'grills',        img:IMG('wok-to-walk-jeddah'),      rating:4.3, count:7800,  price:'$$',   cuisine:'نودلز صيني',       loc:'مول العرب',       open:true,  desc:'سلسلة نودلز صينية سريعة بنكهات لذيذة ومتنوعة يمكن تخصيصها', link:'https://www.google.com/maps/search/wok+to+walk+jeddah' },
+
+  /* ── كافيهات ومقاهي ── */
+  { id:40, name:'كافيه روف',             cat:'cafe', img:IMG('rooftop-cafe-sunset'),           rating:4.7, count:9430,  price:'$$$',  cuisine:'كافيه راقي',       loc:'حي الروضة',       open:true,  desc:'مقهى على ارتفاع شاهق بأجواء رومانسية، قهوة مميزة وإطلالة لا تُنسى', link:'https://www.google.com/maps/search/roof+cafe+jeddah' },
+  { id:41, name:'سكلبتشر كافيه',        cat:'cafe', img:IMG('sculpture-cafe-jeddah'),         rating:4.8, count:7650,  price:'$$$',  cuisine:'كافيه فني',        loc:'حي الزهراء',      open:true,  desc:'من أفضل كافيهات جدة 2025، قهوة مبتكرة وسط أعمال فنية رائعة', link:'https://www.google.com/maps/search/sculpture+cafe+jeddah' },
+  { id:42, name:'فيوري لاونج',          cat:'cafe', img:IMG('fiori-lounge-jeddah'),           rating:4.6, count:6340,  price:'$$$',  cuisine:'كافيه ومطعم',      loc:'الواجهة البحرية', open:true,  desc:'كافيه راقٍ بجلسات تشبه الحديقة، مشاوي ومأكولات غربية وقهوة', link:'https://www.google.com/maps/search/fiori+lounge+jeddah' },
+  { id:43, name:'الودعة كافيه',         cat:'cafe', img:IMG('wadaa-cafe-jeddah'),             rating:4.5, count:5210,  price:'$$$',  cuisine:'كافيه بحري',       loc:'جزيرة النورس',    open:true,  desc:'كافيه تابع لموفنبيك بإطلالة خلابة على البحر وجلسات خارجية هادئة', link:'https://www.google.com/maps/search/الودعة+جدة' },
+  { id:44, name:'برونتو',               cat:'cafe', img:IMG('pronto-sandwich-jeddah'),        rating:4.7, count:8760,  price:'$$',   cuisine:'سندويشات إيطالية', loc:'حي الزهراء',      open:true,  desc:'من أفضل مطاعم السندويشات في جدة 2025، خبز بانوزو إيطالي مميز', link:'https://www.google.com/maps/search/pronto+jeddah' },
+  { id:45, name:'جولد سوشي كلوب',      cat:'cafe', img:IMG('gold-sushi-jeddah'),             rating:4.6, count:7430,  price:'$$$$', cuisine:'سوشي ياباني',      loc:'حي الزهراء',      open:true,  desc:'من أشهر مطاعم السوشي في جدة، أسماك طازجة ومأكولات يابانية راقية', link:'https://www.google.com/maps/search/gold+sushi+jeddah' },
+  { id:46, name:'كافيه لو بتي',        cat:'cafe', img:IMG('le-petit-cafe-jeddah'),          rating:4.5, count:4320,  price:'$$',   cuisine:'فرنسي كلاسيكي',   loc:'حي الروضة',       open:true,  desc:'كافيه فرنسي بأجواء مريحة وكرواسون ومعجنات طازجة يومياً', link:'https://www.google.com/maps/search/french+cafe+jeddah' },
+  { id:47, name:'مطعم طوكيو',          cat:'cafe', img:IMG('japanese-sushi-restaurant'),     rating:4.5, count:6210,  price:'$$$',  cuisine:'ياباني سوشي',      loc:'مول العرب',       open:true,  desc:'سوشي طازج وأطباق يابانية أصيلة وسط أجواء آسيوية', link:'https://www.google.com/maps/search/tokyo+restaurant+jeddah' },
+  { id:48, name:'مطعم البوسفور',       cat:'cafe', img:IMG('turkish-ottoman-food'),          rating:4.4, count:4320,  price:'$$$',  cuisine:'مطبخ تركي',        loc:'شمال جدة',        open:true,  desc:'أطباق عثمانية تقليدية وأجواء تركية أصيلة', link:'https://www.google.com/maps/search/البوسفور+جدة' },
+  { id:49, name:'ستاربكس البحرية',     cat:'cafe', img:IMG('starbucks-sea-view-jeddah'),     rating:4.3, count:15400, price:'$$',   cuisine:'قهوة عالمية',      loc:'كورنيش جدة',      open:true,  desc:'فرع ستاربكس المميز بإطلالة مباشرة على البحر الأحمر وجلسات خارجية', link:'https://www.google.com/maps/search/starbucks+corniche+jeddah' },
+  { id:50, name:'كوفي بين',            cat:'cafe', img:IMG('coffee-bean-jeddah'),            rating:4.2, count:11200, price:'$$',   cuisine:'قهوة وحلويات',     loc:'جميع الأحياء',    open:true,  desc:'سلسلة قهوة عالمية بفروع متعددة في جدة، كيك وبيستري ومشروبات ساخنة وباردة', link:'https://www.google.com/maps/search/coffee+bean+jeddah' },
+  { id:51, name:'لاف لاف',             cat:'cafe', img:IMG('lav-lav-cafe-jeddah'),           rating:4.6, count:8900,  price:'$$$',  cuisine:'كافيه تركي',       loc:'حي الزهراء',      open:true,  desc:'كافيه تركي عصري بقهوة التركي المميزة والحلويات الشرقية والأجواء الدافئة', link:'https://www.google.com/maps/search/lav+lav+jeddah' },
+  { id:52, name:'مزيون',               cat:'cafe', img:IMG('mazyon-cafe-jeddah'),            rating:4.5, count:7650,  price:'$$',   cuisine:'كافيه سعودي',      loc:'حي الروضة',       open:true,  desc:'كافيه سعودي متميز بقهوة العربية والقهوة التخصصية مع حلويات تقليدية', link:'https://www.google.com/maps/search/مزيون+جدة' },
+  { id:53, name:'ووك ستريت',           cat:'cafe', img:IMG('wok-street-jeddah'),             rating:4.4, count:6500,  price:'$$',   cuisine:'آسيوي سريع',       loc:'شارع التحلية',    open:true,  desc:'مطعم آسيوي سريع بأطباق نودلز وأرز مقلي ولفائف ربيع الصيني', link:'https://www.google.com/maps/search/wok+street+jeddah' },
+  { id:54, name:'كافيه المنزل',        cat:'cafe', img:IMG('almanzil-cafe-jeddah'),          rating:4.6, count:9200,  price:'$$$',  cuisine:'كافيه وإفطار',     loc:'حي الروضة',       open:true,  desc:'من أشهر كافيهات الإفطار في جدة، أطباق الإفطار الغربي والشرقي بجودة عالية', link:'https://www.google.com/maps/search/المنزل+كافيه+جدة' },
+  { id:55, name:'بلاك ووايت كافيه',   cat:'cafe', img:IMG('black-white-cafe-jeddah'),       rating:4.4, count:5400,  price:'$$',   cuisine:'كافيه كلاسيكي',    loc:'حي الزهراء',      open:true,  desc:'كافيه بتصميم كلاسيكي أسود وأبيض يقدم قهوة وحلويات ومعجنات طازجة', link:'https://www.google.com/maps/search/black+white+cafe+jeddah' },
+  { id:56, name:'أرض الكيك',          cat:'cafe', img:IMG('cake-land-jeddah'),              rating:4.7, count:12300, price:'$$',   cuisine:'حلويات وكيك',      loc:'جميع الأحياء',    open:true,  desc:'سلسلة متخصصة في الكيك والحلويات الطازجة، توصيل وصالة عرض بفروع كثيرة', link:'https://www.google.com/maps/search/أرض+الكيك+جدة' },
+  { id:57, name:'وافل هاوس جدة',      cat:'cafe', img:IMG('waffle-house-jeddah'),           rating:4.5, count:8700,  price:'$$',   cuisine:'وافل وديسرت',      loc:'حي الروضة',       open:true,  desc:'متخصص في الوافل والفطائر الأمريكية مع الآيس كريم والعسل والمربى', link:'https://www.google.com/maps/search/waffle+house+jeddah' },
+  { id:58, name:'الساعة القديمة',     cat:'cafe', img:IMG('old-clock-cafe-jeddah'),         rating:4.5, count:7100,  price:'$$$',  cuisine:'كافيه تراثي',      loc:'البلد التاريخي',  open:true,  desc:'كافيه بأجواء تراثية في قلب البلد التاريخي، قهوة عربية وشاي وحلويات شرقية', link:'https://www.google.com/maps/search/الساعة+القديمة+جدة' },
+];
+
+
+let REVIEWS = [
+  { name:'محمد العتيبي', ini:'م', place:'كورنيش جدة',         rt:'⭐⭐⭐⭐⭐', date:'منذ 3 أيام',   tx:'تجربة رائعة! الكورنيش في المساء مذهل والهواء منعش. نافورة الملك فهد مبهرة.' },
+  { name:'سارة الغامدي', ini:'س', place:'البلد التاريخي',      rt:'⭐⭐⭐⭐⭐', date:'منذ أسبوع',    tx:'البلد التاريخي كنز حقيقي! المباني العتيقة والأزقة تنقلك لعصر آخر.' },
+  { name:'أحمد الزهراني',ini:'أ', place:'فندق الريتز كارلتون', rt:'⭐⭐⭐⭐',  date:'منذ أسبوعين', tx:'الخدمة ممتازة والغرف فاخرة. المطعم رائع خاصة وجبة الإفطار. يستحق السعر.' },
+  { name:'نورة الحربي',  ini:'ن', place:'مطعم البحر الأحمر',   rt:'⭐⭐⭐⭐⭐', date:'منذ شهر',     tx:'أفضل مطعم مأكولات بحرية! السمك طازج والإطلالة على البحر رائعة جداً.' },
+  { name:'خالد المالكي', ini:'خ', place:'مول العرب',            rt:'⭐⭐⭐⭐',  date:'منذ 5 أيام',  tx:'مجمع ضخم وشامل، يحتوي على كل شيء. مناسب للعائلات جداً.' },
+  { name:'هند القحطاني', ini:'ه', place:'حديقة الفلك',          rt:'⭐⭐⭐⭐⭐', date:'منذ أسبوعين', tx:'تجربة تعليمية ممتعة للأطفال والكبار. العروض الفلكية مذهلة!' },
+];
+
+let user = null;
+const CATS = { heritage:'🏛️ تراث', nature:'🌿 طبيعة', culture:'🎭 ثقافة', food:'🍽️ مأكولات', shopping:'🛍️ تسوق' };
+const RCATS = { seafood:'🦞 بحري', arabic:'🥘 عربي', international:'🌍 عالمي', cafe:'☕ كافيه', grills:'🥩 مشاوي' };
+
+/* GEOLOCATION */
+function detectLocation() {
+  const badge = document.getElementById('locBadge');
+  const locText = document.getElementById('locText');
+  badge.classList.add('loading');
+  locText.textContent = 'جاري تحديد موقعك...';
+  if (!navigator.geolocation) {
+    locText.textContent = 'جدة، المملكة العربية السعودية';
+    badge.classList.remove('loading');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const {latitude:lat, longitude:lng} = pos.coords;
+      locText.textContent = 'موقعك الحالي محدد ✓';
+      badge.classList.remove('loading');
+      const src = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d5000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sar!2ssa`;
+      document.getElementById('heroMap').src = src;
+      document.getElementById('mapTagName').textContent = '📍 موقعك الحالي';
+      document.getElementById('mapTagSub').textContent = 'المعالم القريبة منك';
+      toast('✅ تم تحديد موقعك بنجاح!');
+    },
+    () => {
+      locText.textContent = 'جدة، المملكة العربية السعودية';
+      badge.classList.remove('loading');
+    }
+  );
+}
+
+/* INIT */
+document.addEventListener('DOMContentLoaded', () => {
+  renderA('all'); renderH('all'); renderR('all');
+  renderRec(); renderRev(); renderMapList();
+  detectLocation();
+  window.addEventListener('scroll', () => {
+    const pct = (scrollY / (document.body.scrollHeight - innerHeight)) * 100;
+    document.getElementById('prog').style.width = pct + '%';
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.sbar'))
+      document.getElementById('searchResults').classList.remove('open');
+  });
+});
+
+/* NAVIGATION */
+const PGS = ['home','attractions','restaurants','map','historic','hotels','recommendations','reviews'];
+function go(p) {
+  PGS.forEach(x => {
+    document.getElementById('pg-' + x)?.classList.toggle('on', x===p);
+    const b = document.getElementById('nb-' + x);
+    if (b) b.classList.toggle('on', x===p);
+  });
+  scrollTo({top:0, behavior:'smooth'});
+  if (p === 'historic') setTimeout(initLeafletMap, 200);
+}
+
+/* ================================================================
+   LIVE SEARCH — Overpass API (OpenStreetMap) + قاعدة البيانات المحلية
+   يبحث أولاً في البيانات المحلية فوراً، ثم يستعلم Overpass API
+   ================================================================ */
+
+function normalize(s){
+  return (s||'').replace(/[أإآا]/g,'ا').replace(/[ىي]/g,'ي').replace(/ة/g,'ه').toLowerCase().trim();
+}
+
+/* cache نتائج Overpass لتجنب طلبات متكررة */
+const osmCache = {};
+let osmSearchTimer = null;
+
+function liveSearch(q) {
+  const box = document.getElementById('searchResults');
+  if (!q || q.length < 1) { box.classList.remove('open'); return; }
+
+  /* --- 1. نتائج فورية من البيانات المحلية --- */
+  const localResults = searchLocal(q);
+  renderSearchResults(localResults, box, q, false);
+
+  /* --- 2. بعد 400ms نستعلم Overpass API --- */
+  clearTimeout(osmSearchTimer);
+  osmSearchTimer = setTimeout(() => fetchOSM(q, box), 400);
+}
+
+function searchLocal(q) {
+  const nq = normalize(q);
+  const ql = q.toLowerCase().trim();
+  const pool = [
+    ...ATTR.map(a => ({...a, _type:'معلم', _src:'local'})),
+    ...HTLS.map(h => ({...h, _type:'فندق', cat:'hotel', _src:'local'})),
+    ...RESTS.map(r => ({...r, _type:'مطعم', _src:'local'})),
+  ];
+  return pool.filter(item => {
+    const fields = [item.name, item.desc||'', item.cuisine||'', item.loc||'', item.badge||''];
+    return fields.some(f => normalize(f).includes(nq) || f.toLowerCase().includes(ql));
+  }).slice(0, 6);
+}
+
+async function fetchOSM(q, box) {
+  if (osmCache[q]) {
+    const local = searchLocal(q);
+    const merged = mergeResults(local, osmCache[q]);
+    renderSearchResults(merged, box, q, true);
+    return;
+  }
+
+  /* Overpass QL — يبحث في نطاق جدة (bbox) */
+  const bbox = '21.2,38.8,21.8,39.4';
+  const escaped = q.replace(/"/g, '\\"');
+  const query = `
+[out:json][timeout:8];
+(
+  node["name"~"${escaped}",i](${bbox});
+  node["name:ar"~"${escaped}",i](${bbox});
+  way["name"~"${escaped}",i](${bbox});
+  way["name:ar"~"${escaped}",i](${bbox});
+);
+out center 20;`;
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query,
+      headers: {'Content-Type': 'text/plain'}
+    });
+    if (!res.ok) throw new Error('OSM error');
+    const data = await res.json();
+    const osmItems = parseOSM(data.elements);
+    osmCache[q] = osmItems;
+    const local = searchLocal(q);
+    const merged = mergeResults(local, osmItems);
+    renderSearchResults(merged, box, q, true);
+  } catch(e) {
+    /* فشل الـ API — نكتفي بالنتائج المحلية */
+    const local = searchLocal(q);
+    renderSearchResults(local, box, q, true);
+  }
+}
+
+function parseOSM(elements) {
+  const typeMap = {
+    restaurant:'مطعم', cafe:'كافيه', fast_food:'وجبات سريعة',
+    hotel:'فندق', hostel:'فندق', motel:'فندق', guest_house:'فندق',
+    attraction:'معلم', museum:'متحف', mosque:'مسجد', place_of_worship:'مسجد',
+    park:'حديقة', mall:'مول', supermarket:'سوبرماركت',
+    bakery:'مخبز', ice_cream:'آيس كريم', bar:'مشروبات',
+    pharmacy:'صيدلية', hospital:'مستشفى', school:'مدرسة',
+    bank:'بنك', atm:'صراف آلي', fuel:'محطة وقود',
+    cinema:'سينما', theatre:'مسرح', gym:'نادي رياضي',
+    beach:'شاطئ', marina:'مرسى', historic:'تاريخي'
+  };
+  return elements
+    .filter(el => {
+      const t = el.tags || {};
+      return (t.name || t['name:ar']) && (el.lat || el.center);
+    })
+    .map(el => {
+      const t = el.tags || {};
+      const lat = el.lat || el.center?.lat;
+      const lng = el.lon || el.center?.lon;
+      const amenity = t.amenity || t.tourism || t.leisure || t.shop || t.historic || '';
+      const nameAr = t['name:ar'] || t.name || '';
+      const nameEn = t['name:en'] || t.name || '';
+      const typeLabel = typeMap[amenity] || amenity || 'مكان';
+      return {
+        _src: 'osm',
+        _type: typeLabel,
+        id: el.id,
+        name: nameAr,
+        nameEn: nameEn,
+        desc: [t.cuisine, t['addr:street'], t.phone].filter(Boolean).join(' · ') || 'جدة',
+        img: null,
+        lat, lng,
+        osmLink: `https://www.google.com/maps?q=${lat},${lng}`
+      };
+    })
+    .filter(el => el.name);
+}
+
+function mergeResults(local, osm) {
+  /* ندمج ونزيل المكررات بالاسم */
+  const seen = new Set(local.map(i => normalize(i.name)));
+  const fresh = osm.filter(i => !seen.has(normalize(i.name)));
+  return [...local, ...fresh].slice(0, 12);
+}
+
+function renderSearchResults(items, box, q, done) {
+  if (!items.length && done) {
+    box.innerHTML = `<div class="sr-item" style="color:var(--muted);justify-content:center;cursor:default;">لا توجد نتائج لـ "${q}"</div>`;
+    box.classList.add('open'); return;
+  }
+  if (!items.length) {
+    box.innerHTML = `<div class="sr-item" style="color:var(--muted);justify-content:center;cursor:default;"><span style="animation:pulse 1s infinite;display:inline-block">🔍 جاري البحث...</span></div>`;
+    box.classList.add('open'); return;
+  }
+
+  const loadingRow = done ? '' : `<div class="sr-item" style="color:var(--muted);font-size:.75rem;justify-content:center;cursor:default;padding:6px;">🌐 جاري البحث في OpenStreetMap...</div>`;
+
+  box.innerHTML = items.map(r => {
+    const imgEl = r.img
+      ? `<img src="${r.img}" alt="${r.name}" onerror="this.style.background='var(--d3)'">`
+      : `<div style="width:42px;height:42px;border-radius:8px;background:var(--d3);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">${typeIcon(r._type)}</div>`;
+    const sub = r._src==='osm'
+      ? `${r._type}${r.nameEn && r.nameEn!==r.name?' · '+r.nameEn:''}${r.desc?' · '+r.desc:''}`
+      : `${r._type}${r.cuisine?' · '+r.cuisine:''}${r.loc?' · '+r.loc:''}`;
+    const onclick = r._src==='osm'
+      ? `osmSelect('${r.name.replace(/'/g,"\\'")}','${r.osmLink}')`
+      : `selectResult('${r.name.replace(/'/g,"\\'")}','${r._type}','${encodeURIComponent(r.map||'')}','')`;
+    return `<div class="sr-item" onclick="${onclick}">${imgEl}<div><div class="sri-name">${r.name}${r._src==='osm'?'<span style="font-size:.62rem;background:rgba(88,166,255,.15);color:var(--accent);padding:1px 5px;border-radius:4px;margin-right:4px;">OSM</span>':''}</div><div class="sri-cat">${sub}</div></div></div>`;
+  }).join('') + loadingRow;
+  box.classList.add('open');
+}
+
+function typeIcon(t) {
+  const icons = { مطعم:'🍽️', كافيه:'☕', فندق:'🏨', معلم:'📍', متحف:'🏛️', مسجد:'🕌', حديقة:'🌿', مول:'🛍️', شاطئ:'🏖️', سينما:'🎬', نادي:'💪', صيدلية:'💊', مستشفى:'🏥', بنك:'🏦' };
+  for (const [k,v] of Object.entries(icons)) if (t.includes(k)) return v;
+  return '📍';
+}
+
+function osmSelect(name, link) {
+  document.getElementById('heroQ').value = name;
+  document.getElementById('searchResults').classList.remove('open');
+  window.open(link, '_blank');
+  toast('📍 ' + name);
+}
+function doSearch() {
+  const q = document.getElementById('heroQ').value.trim();
+  const cat = document.getElementById('searchCat').value;
+  if (!q) return;
+  if (cat==='hotel') go('hotels');
+  else if (cat==='restaurant' || cat==='food') go('restaurants');
+  else go('attractions');
+  toast('🔍 نتائج البحث عن: ' + q);
+  document.getElementById('searchResults').classList.remove('open');
+}
+
+/* ATTRACTIONS */
+function renderA(f) {
+  const data = f==='all' ? ATTR : ATTR.filter(a => a.cat===f);
+  document.getElementById('aGrid').innerHTML = data.map(a => `
+    <article class="ac" onclick="openMap('${a.map}','${a.name}')">
+      <div class="tw">
+        <img src="${a.img}" alt="${a.name}" loading="lazy"
+             onerror="this.src='https://picsum.photos/seed/default-place/600/210'">
+        ${a.badge ? '<div class="pa">'+a.badge+'</div>' : ''}
+      </div>
+      <div class="bd">
+        <div class="ct">${CATS[a.cat]||a.cat}</div>
+        <div class="nm">${a.name}</div>
+        <div class="ds">${a.desc}</div>
+        <div class="ft">
+          <div>
+            <div class="sr-row"><span class="s">⭐</span><span class="rn">${a.rating}</span><span class="rc">(${a.count.toLocaleString()})</span></div>
+            <div class="di">📍 ${a.dist}</div>
+          </div>
+          <button class="bm" onclick="event.stopPropagation();openMap('${a.map}','${a.name}')">📍 الموقع</button>
+        </div>
+      </div>
+    </article>`).join('');
+}
+function filterA(f, btn) {
+  document.querySelectorAll('#aF .fb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on'); renderA(f);
+}
+
+/* HOTELS */
+function renderH(f) {
+  const data = f==='all' ? HTLS : HTLS.filter(h => h.f===f);
+  document.getElementById('hGrid').innerHTML = data.map(h => `
+    <article class="hc">
+      <div class="tw">
+        <img src="${h.img}" alt="${h.name}" loading="lazy"
+             onerror="this.src='https://picsum.photos/seed/default-hotel/600/210'">
+        <div class="sa">${'⭐'.repeat(h.stars)}</div>
+        
+      </div>
+      <div class="bd">
+        <div class="hn">${h.name}</div>
+        <div class="hl">📍 ${h.loc}</div>
+        <div class="ams">${h.ams.map(a => '<span class="am">'+a+'</span>').join('')}</div>
+        <div class="hf">
+          <div>
+            <div class="pr">${h.price.toLocaleString()} <span>ريال/ليلة</span></div>
+            <div style="font-size:.76rem;color:var(--muted);">⭐ ${h.rating} (${h.count.toLocaleString()})</div>
+          </div>
+          <button class="bm" onclick="bookH('${h.name}')">
+            🏨 اعرض على Google Travel
+          </button>
+        </div>
+      </div>
+    </article>`).join('');
+}
+function filterH(f, btn) {
+  document.querySelectorAll('#hF .fb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on'); renderH(f);
+}
+function bookH(name) {
+  const q = encodeURIComponent(name + ' جدة');
+  window.open('https://www.google.com/travel/hotels/search?q=' + q, '_blank');
+  toast('🏨 عرض ' + name + ' على Google Travel');
+}
+
+/* RESTAURANTS */
+function renderR(f) {
+  const data = f==='all' ? RESTS : RESTS.filter(r => r.cat===f);
+  document.getElementById('rGrid').innerHTML = data.map(r => `
+    <article class="rc-card">
+      <div class="tw">
+        <img src="${r.img}" alt="${r.name}" loading="lazy"
+             onerror="this.src='https://picsum.photos/seed/default-food/600/210'">
+        <div class="sa">${r.price}</div>
+        
+      </div>
+      <div class="bd">
+        <span class="cuisine-tag">${RCATS[r.cat]||r.cat} · ${r.cuisine}</span>
+        <div style="font-size:1.06rem;font-weight:800;margin-bottom:4px;">${r.name}</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px;">📍 ${r.loc}</div>
+        <div style="font-size:.86rem;color:var(--muted);line-height:1.55;margin-bottom:12px;">${r.desc}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div class="sr-row"><span class="s">⭐</span><span class="rn">${r.rating}</span><span class="rc">(${r.count.toLocaleString()})</span></div>
+            <div style="margin-top:4px;">${r.open
+              ? '<span class="open-badge">🟢 مفتوح الآن</span>'
+              : '<span class="closed-badge">🔴 مغلق</span>'}</div>
+          </div>
+          <button class="bm" onclick="bookR('${r.name}')">
+            📍 عرض الموقع
+          </button>
+        </div>
+      </div>
+    </article>`).join('');
+}
+function filterR(f, btn) {
+  document.querySelectorAll('#rfF .fb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on'); renderR(f);
+}
+function bookR(name) {
+  const q = encodeURIComponent(name + ' جدة');
+  window.open('https://www.google.com/maps/search/' + q, '_blank');
+  toast('🍽️ عرض ' + name + ' على خرائط Google');
+}
+
+/* MAP LIST */
+function renderMapList() {
+  document.getElementById('mapList').innerHTML = ATTR.map((a, i) => `
+    <div class="mi ${i===0?'sel':''}" onclick="chMap('${a.map}','${a.name}',this)">
+      <img src="${a.img}" alt="${a.name}" loading="lazy"
+           onerror="this.style.background='var(--d3)'">
+      <div>
+        <div class="mn">${a.name}</div>
+        <div class="mm">⭐ ${a.rating} · ${CATS[a.cat]||a.cat}</div>
+        <div class="md">📍 ${a.dist}</div>
+      </div>
+    </div>`).join('');
+}
+function chMap(url, name, el) {
+  document.getElementById('mainMap').src = url;
+  document.querySelectorAll('.mi').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function openMap(url, name) {
+  go('map');
+  setTimeout(() => {
+    document.getElementById('mainMap').src = url;
+    toast('📍 عرض موقع: ' + name);
+  }, 300);
+}
+
+/* RECOMMENDATIONS */
+function renderRec() {
+  const tA = [...ATTR].sort((a,b) => b.rating-a.rating).slice(0,5);
+  const tH = [...HTLS].sort((a,b) => b.rating-a.rating).slice(0,4);
+  document.getElementById('recA').innerHTML = tA.map((a,i) => `
+    <div class="rc2" onclick="openMap('${a.map}','${a.name}')">
+      <div class="rnum">${String(i+1).padStart(2,'0')}</div>
+      <img src="${a.img}" alt="${a.name}" loading="lazy" onerror="this.style.background='var(--d3)'">
+      <div style="flex:1;"><div class="rn2">${a.name}</div><div class="rw">بناءً على تفضيلاتك</div></div>
+      <div class="rsc">⭐${a.rating}</div>
+    </div>`).join('');
+  document.getElementById('recH').innerHTML = tH.map((h,i) => `
+    <div class="rc2" onclick="bookH('${h.name}','${h.link}')">
+      <div class="rnum">${String(i+1).padStart(2,'0')}</div>
+      <img src="${h.img}" alt="${h.name}" loading="lazy" onerror="this.style.background='var(--d3)'">
+      <div style="flex:1;"><div class="rn2">${h.name}</div><div class="rw">يتوافق مع ميزانيتك</div></div>
+      <div class="rsc">⭐${h.rating}</div>
+    </div>`).join('');
+}
+
+/* REVIEWS */
+function renderRev() {
+  document.getElementById('rvGrid').innerHTML = REVIEWS.map(r => `
+    <div class="rvc">
+      <div class="rvt">
+        <div class="av">${r.ini}</div>
+        <div><div class="rvun">${r.name}</div><div class="rvmt">${r.date} · ${r.rt}</div></div>
+      </div>
+      <div class="rvtx">${r.tx}</div>
+      <div class="rvpl">📍 ${r.place}</div>
+    </div>`).join('');
+}
+function submitReview() {
+  const tx = document.getElementById('rvTx').value.trim();
+  if (!tx) { toast('⚠️ أدخل نص التقييم أولاً'); return; }
+  REVIEWS.unshift({
+    name: user?.name||'مستخدم جديد', ini: (user?.name||'م')[0],
+    place: document.getElementById('rvPl').value,
+    rt: document.getElementById('rvRt').value,
+    date: 'الآن', tx
+  });
+  renderRev();
+  document.getElementById('rvTx').value = '';
+  toast('✅ تم نشر تقييمك!');
+}
+
+/* AUTH */
+function openModal(t) { document.getElementById('overlay').classList.add('open'); switchTab(t); }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function switchTab(t) {
+  const l = t==='login';
+  document.getElementById('lF').style.display = l ? 'block' : 'none';
+  document.getElementById('rF').style.display = l ? 'none' : 'block';
+  document.getElementById('tl').classList.toggle('on', l);
+  document.getElementById('tr').classList.toggle('on', !l);
+}
+function doLogin() {
+  const e = document.getElementById('lE').value.trim();
+  const p = document.getElementById('lP').value;
+  if (!e||!p) { toast('⚠️ أدخل البريد وكلمة المرور'); return; }
+  user = {name: e.split('@')[0], email: e};
+  closeModal(); updateNav();
+  toast('✅ مرحباً بك، ' + user.name + '!');
+}
+function doRegister() {
+  const n = document.getElementById('rN').value.trim();
+  const e = document.getElementById('rE').value.trim();
+  const p = document.getElementById('rPa').value;
+  if (!n||!e||!p) { toast('⚠️ أكمل جميع الحقول'); return; }
+  user = {name:n, email:e};
+  closeModal(); updateNav();
+  toast('🎉 تم إنشاء حسابك يا ' + n + '!');
+}
+function updateNav() {
+  document.getElementById('navAuth').innerHTML =
+    '<span style="font-size:.88rem;color:var(--muted);">مرحباً، <strong style="color:var(--gold);">' + user.name + '</strong></span>' +
+    '<button class="btn-g" onclick="doLogout()">خروج</button>';
+}
+function doLogout() {
+  user = null;
+  document.getElementById('navAuth').innerHTML =
+    '<button class="btn-g" onclick="openModal(\'login\')">تسجيل الدخول</button>' +
+    '<button class="btn-p" onclick="openModal(\'register\')">إنشاء حساب</button>';
+  toast('👋 تم تسجيل الخروج');
+}
+
+
+/* ===== HISTORIC JEDDAH LEAFLET MAP ===== */
+const HISTORIC_PLACES = [
+  { id:1, name:'بيت نصيف',         cat:'heritage', lat:21.4853, lng:39.1865, icon:'🏛️', desc:'قصر تاريخي بُني عام 1872م، استقبل الملك عبدالعزيز ويُعدّ تحفة معمارية فريدة', badge:'أيقونة البلد' },
+  { id:2, name:'جامع الشافعي',      cat:'mosque',   lat:21.4861, lng:39.1882, icon:'🕌', desc:'أقدم مساجد جدة، يعود تاريخه إلى القرن السابع الهجري ومبني بالحجر المرجاني', badge:'الأقدم في جدة' },
+  { id:3, name:'سوق الجامع',        cat:'market',   lat:21.4858, lng:39.1878, icon:'🛍️', desc:'أعرق أسواق البلد التاريخي بتجارة التوابل والعطور والمنسوجات التقليدية', badge:'تراث تجاري' },
+  { id:4, name:'بيت باناجة',        cat:'heritage', lat:21.4842, lng:39.1871, icon:'🏛️', desc:'منزل تاريخي بالرواشين الخشبية المنحوتة، نموذج مثالي للعمارة الحجازية الأصيلة', badge:'يونسكو' },
+  { id:5, name:'باب مكة',            cat:'landmark', lat:21.4875, lng:39.1856, icon:'📍', desc:'بوابة جدة الشرقية التاريخية التي كان يمر منها الحجاج والتجار قروناً طويلة', badge:'بوابة التاريخ' },
+  { id:6, name:'جامع الحنفي',       cat:'mosque',   lat:21.4849, lng:39.1891, icon:'🕌', desc:'مسجد أثري ذو مئذنة مميزة، من أعرق المساجد في قلب البلد التاريخي', badge:'أثري' },
+  { id:7, name:'سوق البدو',          cat:'market',   lat:21.4865, lng:39.1860, icon:'🛍️', desc:'سوق شعبي تقليدي للمجوهرات الفضية والملابس التراثية والتحف القديمة', badge:'تراث شعبي' },
+  { id:8, name:'بيت الطيار',        cat:'heritage', lat:21.4836, lng:39.1880, icon:'🏛️', desc:'من أجمل البيوت التاريخية بجدة، يتميز بنقوش رواشينه وألوانها الزاهية', badge:'معلم بارز' },
+  { id:9, name:'ميدان العلوي',      cat:'landmark', lat:21.4870, lng:39.1840, icon:'📍', desc:'الساحة المركزية لجدة التاريخية، مركز الحياة الاجتماعية والتجارية قروناً', badge:'قلب البلد' },
+  { id:10,name:'مسجد عثمان بن عفان',cat:'mosque',   lat:21.4855, lng:39.1900, icon:'🕌', desc:'مسجد تاريخي يُنسب بناؤه إلى الخليفة عثمان بن عفان رضي الله عنه', badge:'صحابي جليل' },
+  { id:11,name:'بيت الشيخ',         cat:'heritage', lat:21.4828, lng:39.1868, icon:'🏛️', desc:'منزل علماء جدة القديم، يحتضن تحفاً أثرية نادرة وكتباً تراثية ثمينة', badge:'مركز علمي' },
+  { id:12,name:'برج البلد',          cat:'landmark', lat:21.4880, lng:39.1875, icon:'📍', desc:'برج المراقبة التاريخي الذي كان يُستخدم للإنذار المبكر وحماية مدينة جدة', badge:'حارس المدينة' },
+];
+
+let leafletMap = null;
+let allMarkers = [];
+let historicFilter = 'all';
+
+const CAT_COLORS = { heritage:'#C9A84C', mosque:'#58A6FF', market:'#3FB950', landmark:'#F85149' };
+const CAT_LABELS = { heritage:'🏛️ تراث', mosque:'🕌 مساجد', market:'🛍️ أسواق', landmark:'📍 معالم' };
+
+function createCustomIcon(place) {
+  const color = CAT_COLORS[place.cat] || '#C9A84C';
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      background:${color};
+      color:#0D1117;
+      width:36px;height:36px;
+      border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;
+      box-shadow:0 3px 12px rgba(0,0,0,0.5);
+      border:2px solid rgba(255,255,255,0.3);
+      cursor:pointer;
+    "><span style="transform:rotate(45deg)">${place.icon}</span></div>`,
+    iconSize: [36,36],
+    iconAnchor: [18,36],
+    popupAnchor: [0,-38],
+  });
+}
+
+function initLeafletMap() {
+  if (leafletMap) return;
+  leafletMap = L.map('leafletMap', {
+    center: [21.4858, 21.4858],
+    zoom: 16,
+    zoomControl: true,
+  });
+  leafletMap.setView([21.4858, 39.1875], 16);
+
+  // Dark tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '',
+    maxZoom: 19,
+  }).addTo(leafletMap);
+
+  // Add all markers
+  HISTORIC_PLACES.forEach(place => {
+    const marker = L.marker([place.lat, place.lng], { icon: createCustomIcon(place) })
+      .addTo(leafletMap)
+      .bindPopup(`
+        <div>
+          <div class="lf-pop-cat">${CAT_LABELS[place.cat]||place.cat}</div>
+          <div class="lf-pop-title">${place.icon} ${place.name}</div>
+          <div class="lf-pop-desc">${place.desc}</div>
+          <button class="lf-pop-btn" onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(place.name+' جدة التاريخية')}','_blank')">🗺️ افتح في خرائط Google</button>
+        </div>
+      `, { maxWidth: 240 });
+    marker._placeData = place;
+    allMarkers.push(marker);
+  });
+
+  renderHistoricList('all');
+}
+
+function filterHistoric(cat, btn) {
+  document.querySelectorAll('#historicFilters .fb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  historicFilter = cat;
+  allMarkers.forEach(m => {
+    const p = m._placeData;
+    if (cat === 'all' || p.cat === cat) {
+      if (!leafletMap.hasLayer(m)) m.addTo(leafletMap);
+    } else {
+      if (leafletMap.hasLayer(m)) leafletMap.removeLayer(m);
+    }
+  });
+  renderHistoricList(cat);
+}
+
+function renderHistoricList(cat) {
+  const places = cat === 'all' ? HISTORIC_PLACES : HISTORIC_PLACES.filter(p => p.cat === cat);
+  document.getElementById('historicList').innerHTML = places.map(p => `
+    <div class="mi" onclick="flyToPlace(${p.lat},${p.lng},'${p.name}')">
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(201,168,76,.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">${p.icon}</div>
+      <div>
+        <div class="mn">${p.name}</div>
+        <div class="mm">${CAT_LABELS[p.cat]||p.cat}</div>
+        <div class="md" style="color:${CAT_COLORS[p.cat]||'var(--gold)'};">${p.badge}</div>
+      </div>
+    </div>`).join('');
+}
+
+function flyToPlace(lat, lng, name) {
+  if (!leafletMap) return;
+  leafletMap.flyTo([lat, lng], 18, { animate: true, duration: 1 });
+  const marker = allMarkers.find(m => m._placeData.name === name);
+  if (marker) setTimeout(() => marker.openPopup(), 1000);
+  toast('📍 ' + name);
+}
+
+/* TOAST */
+let T;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(T); T = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
